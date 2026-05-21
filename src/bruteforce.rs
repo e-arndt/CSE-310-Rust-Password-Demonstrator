@@ -1,10 +1,13 @@
 use std::time::Instant;
 
+use crate::config::CHARSET;
 use crate::hashing::hash_password;
 use crate::models::CrackResult;
 
-const CHARSET: &[u8] = b"abcdefghijklmnopqrstuvwxyz";
-
+// Converts a numeric index into a password guess.
+// This works like counting in a custom base where each "digit" is a character
+// from the selected charset. This lets the program generate guesses without
+// storing a list of previous attempts.
 fn index_to_guess(mut index: u64, length: usize, charset: &[u8]) -> String {
     let base = charset.len() as u64;
     let mut buffer = vec![charset[0]; length];
@@ -18,6 +21,9 @@ fn index_to_guess(mut index: u64, length: usize, charset: &[u8]) -> String {
     String::from_utf8(buffer).expect("Generated guess should be valid UTF-8")
 }
 
+// Runs a deterministic brute-force search against the target hash.
+// The search starts with shorter passwords first and then increases length,
+// which helps demonstrate why short passwords are easier to brute force.
 pub fn brute_force(target_hash: &str, max_length: usize) -> Option<CrackResult> {
     let start = Instant::now();
     let mut attempts: u64 = 0;
@@ -29,16 +35,7 @@ pub fn brute_force(target_hash: &str, max_length: usize) -> Option<CrackResult> 
             let guess = index_to_guess(index, length, CHARSET);
             attempts += 1;
 
-            if attempts % 100_000 == 0 {
-                let elapsed = start.elapsed().as_secs_f64();
-                let rate = attempts as f64 / elapsed;
-
-                println!(
-                    "Attempts: {} | Current guess: {} | Rate: {:.0} guesses/sec",
-                    attempts, guess, rate
-                );
-            }
-
+            // Hash each generated guess and compare the hash to the target hash.
             let guess_hash = hash_password(&guess);
 
             if guess_hash == target_hash {

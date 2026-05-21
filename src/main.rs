@@ -1,52 +1,104 @@
 use std::io::{self, Write};
+use std::process::Command;
 
 mod bruteforce;
+mod config;
 mod hashing;
 mod models;
 
 use bruteforce::brute_force;
+use config::{CHARSET_LABEL, MAX_LENGTH};
 use hashing::hash_password;
 
-fn main() {
-    let max_length = 5;
-    let mut target = String::new();
 
-    println!("RustPassLab");
-    println!("Educational brute-force password strength demonstrator");
-    println!("Target password length limit: {}", max_length);
-    println!("Charset: lowercase a-z");
-    println!();
-
-    print!("Enter a lowercase password to test (max length {}): ", max_length);
-    io::stdout().flush().expect("Failed to flush stdout");
-
-    io::stdin()
-        .read_line(&mut target)
-        .expect("Failed to read input");
-
-    let target = target.trim().to_string();
-
+// Validates the user's password before running the brute-force demo.
+// These limits keep the project educational, controlled, and fast enough
+// for a short classroom demonstration.
+fn validate_target(target: &str, max_length: usize) -> Result<(), String> {
     if target.is_empty() {
-        println!("Password cannot be empty.");
-        return;
+        return Err("Password cannot be empty.".to_string());
     }
 
     if target.len() > max_length {
-        println!("Password is too long. Maximum length is {}.", max_length);
-        return;
+        return Err(format!(
+            "Password is too long. Maximum length is {}.",
+            max_length
+        ));
     }
 
     if !target.chars().all(|c| c.is_ascii_lowercase()) {
-        println!("Password must only contain lowercase letters a-z.");
-        return;
+        return Err("Password must only contain lowercase letters a-z.".to_string());
     }
+
+    Ok(())
+}
+
+fn clear_screen() {
+    if cfg!(target_os = "windows") {
+        Command::new("cmd")
+            .args(["/C", "cls"])
+            .status()
+            .expect("Failed to clear screen");
+    } else {
+        Command::new("clear")
+            .status()
+            .expect("Failed to clear screen");
+    }
+}
+
+fn main() {
+    let mut error_message: Option<String> = None;
+
+    let target = loop {
+        clear_screen();
+
+        println!("RustPassLab");
+        println!("Educational brute-force password strength demonstrator");
+        println!("Target password length limit: {}", MAX_LENGTH);
+        println!("Charset: {}", CHARSET_LABEL);
+        println!();
+
+        if let Some(message) = &error_message {
+            println!("Error: {}", message);
+            println!("Please try again.\n");
+        }
+
+        let mut input = String::new();
+
+        print!(
+            "Enter a lowercase password to test (max length {}): ",
+            MAX_LENGTH
+        );
+        io::stdout().flush().expect("Failed to flush stdout");
+
+        io::stdin()
+            .read_line(&mut input)
+            .expect("Failed to read input");
+
+        let input = input.trim().to_string();
+
+        match validate_target(&input, MAX_LENGTH) {
+            Ok(()) => break input,
+            Err(message) => {
+                error_message = Some(message);
+            }
+        }
+    };
+
+    clear_screen();
+
+    println!("RustPassLab");
+    println!("Educational brute-force password strength demonstrator");
+    println!("Target password length limit: {}", MAX_LENGTH);
+    println!("Charset: {}", CHARSET_LABEL);
+    println!();
 
     let target_hash = hash_password(&target);
 
     println!("Target SHA-256 hash: {}", target_hash);
     println!();
 
-    match brute_force(&target_hash, max_length) {
+    match brute_force(&target_hash, MAX_LENGTH) {
         Some(result) => {
             println!();
             println!("Password found!");
