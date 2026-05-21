@@ -1,6 +1,5 @@
 use std::time::Instant;
 
-use crate::config::CHARSET;
 use crate::hashing::hash_password;
 use crate::models::CrackResult;
 
@@ -24,18 +23,24 @@ fn index_to_guess(mut index: u64, length: usize, charset: &[u8]) -> String {
 // Runs a deterministic brute-force search against the target hash.
 // The search starts with shorter passwords first and then increases length,
 // which helps demonstrate why short passwords are easier to brute force.
-pub fn brute_force(target_hash: &str, max_length: usize) -> Option<CrackResult> {
+//
+// The charset is passed in so the same engine can be reused for weak,
+// moderate, and future strong/symbol-based demonstrations.
+pub fn brute_force(
+    target_hash: &str,
+    max_length: usize,
+    charset: &[u8],
+) -> Option<CrackResult> {
     let start = Instant::now();
     let mut attempts: u64 = 0;
 
     for length in 1..=max_length {
-        let combinations = CHARSET.len().pow(length as u32) as u64;
+        let combinations = charset.len().pow(length as u32) as u64;
 
         for index in 0..combinations {
-            let guess = index_to_guess(index, length, CHARSET);
+            let guess = index_to_guess(index, length, charset);
             attempts += 1;
 
-            // Hash each generated guess and compare the hash to the target hash.
             let guess_hash = hash_password(&guess);
 
             if guess_hash == target_hash {
