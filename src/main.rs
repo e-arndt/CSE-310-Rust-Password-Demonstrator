@@ -1,9 +1,7 @@
-use std::io::{self, Write};
-use std::process::Command;
-
 mod bruteforce;
 mod config;
 mod hashing;
+mod menu;
 mod models;
 mod strong_estimator;
 
@@ -14,132 +12,28 @@ use config::{
     WEAK_CHARSET, WEAK_CHARSET_LABEL,
 };
 use hashing::hash_password;
-use strong_estimator::{estimate_strong_password, format_duration};
-
-struct PasswordMode {
-    title: &'static str,
-    prompt: &'static str,
-    charset_label: &'static str,
-    max_length: usize,
-    charset: &'static [u8],
-    validator: fn(char) -> bool,
-    validation_message: &'static str,
-}
-
-fn validate_target(target: &str, mode: &PasswordMode) -> Result<(), String> {
-    if target.is_empty() {
-        return Err("Password cannot be empty.".to_string());
-    }
-
-    if target.len() > mode.max_length {
-        return Err(format!(
-            "Password is too long. Maximum length is {}.",
-            mode.max_length
-        ));
-    }
-
-    if !target.chars().all(mode.validator) {
-        return Err(mode.validation_message.to_string());
-    }
-
-    Ok(())
-}
-
-fn clear_screen() {
-    if cfg!(target_os = "windows") {
-        Command::new("cmd")
-            .args(["/C", "cls"])
-            .status()
-            .expect("Failed to clear screen");
-    } else {
-        Command::new("clear")
-            .status()
-            .expect("Failed to clear screen");
-    }
-}
-
-fn read_password_for_mode(mode: &PasswordMode) -> String {
-    let mut error_message: Option<String> = None;
-
-    loop {
-        clear_screen();
-
-        println!("RustPassLab");
-        println!("Educational brute-force password strength demonstrator");
-        println!();
-        println!("{}", mode.title);
-        println!("Target password length limit: {}", mode.max_length);
-        println!("Charset: {}", mode.charset_label);
-        println!();
-
-        if let Some(message) = &error_message {
-            println!("Error: {}", message);
-            println!("Please try again.\n");
-        }
-
-        let mut input = String::new();
-
-        print!("{}", mode.prompt);
-        io::stdout().flush().expect("Failed to flush stdout");
-
-        io::stdin()
-            .read_line(&mut input)
-            .expect("Failed to read input");
-
-        let input = input.trim().to_string();
-
-        match validate_target(&input, mode) {
-            Ok(()) => return input,
-            Err(message) => {
-                error_message = Some(message);
-            }
-        }
-    }
-}
+use menu::{
+    pause_for_enter, print_bruteforce_screen, print_crack_result, print_estimate_failed,
+    print_password_not_found, print_strong_estimate_result, print_strong_estimate_screen,
+    read_password_for_mode, PasswordMode,
+};
+use strong_estimator::estimate_strong_password;
 
 fn run_bruteforce_demo(mode: &PasswordMode) -> Option<f64> {
     let target = read_password_for_mode(mode);
-
-    clear_screen();
-
-    println!("RustPassLab");
-    println!("Educational brute-force password strength demonstrator");
-    println!();
-    println!("{}", mode.title);
-    println!("Target password length limit: {}", mode.max_length);
-    println!("Charset: {}", mode.charset_label);
-    println!();
-
     let target_hash = hash_password(&target);
 
-    println!("Target SHA-256 hash: {}", target_hash);
-    println!();
+    print_bruteforce_screen(mode, &target_hash);
 
     let rate = match brute_force(&target_hash, mode.max_length, mode.charset) {
-        Some(result) => {
-            let rate = result.guesses_per_second();
-
-            println!();
-            println!("Password found!");
-            println!("Password: {}", result.password);
-            println!("Attempts: {}", result.attempts);
-            println!("Elapsed time: {:.4} seconds", result.elapsed_seconds);
-            println!("Average rate: {:.0} guesses/sec", rate);
-
-            Some(rate)
-        }
+        Some(result) => Some(print_crack_result(&result)),
         None => {
-            println!("Password was not found within the configured search space.");
+            print_password_not_found();
             None
         }
     };
 
-    println!();
-    println!("Press Enter to continue...");
-    let mut pause = String::new();
-    io::stdin()
-        .read_line(&mut pause)
-        .expect("Failed to pause program");
+    pause_for_enter();
 
     rate
 }
@@ -165,6 +59,16 @@ fn main() {
         validation_message: "Password must only contain letters A-Z, a-z, and digits 0-9.",
     };
 
+    let strong_mode = PasswordMode {
+        title: "Strong password estimate",
+        prompt: "Enter a strong password to estimate only: ",
+        charset_label: STRONG_CHARSET_LABEL,
+        max_length: MAX_STRONG_PASSWORD_LENGTH,
+        charset: STRONG_CHARSET,
+        validator: |c| STRONG_CHARSET.contains(&(c as u8)),
+        validation_message: "Password must only contain supported letters, digits, and symbols.",
+    };
+
     let weak_rate = run_bruteforce_demo(&weak_mode);
     let moderate_rate = run_bruteforce_demo(&moderate_mode);
 
@@ -175,39 +79,12 @@ fn main() {
         (None, None) => 0.0,
     };
 
-    let strong_password = read_password_for_mode(&PasswordMode {
-        title: "Strong password estimate",
-        prompt: "Enter a strong password to estimate only: ",
-        charset_label: STRONG_CHARSET_LABEL,
-        max_length: MAX_STRONG_PASSWORD_LENGTH,
-        charset: STRONG_CHARSET,
-        validator: |c| STRONG_CHARSET.contains(&(c as u8)),
-        validation_message: "Password must only contain supported letters, digits, and symbols.",
-    });
+    let strong_password = read_password_for_mode(&strong_mode);
 
-    clear_screen();
-
-    println!("RustPassLab");
-    println!("Educational brute-force password strength demonstrator");
-    println!();
-    println!("Strong password estimate");
-    println!("Charset: {}", STRONG_CHARSET_LABEL);
-    println!("Local measured rate: {:.0} guesses/sec", local_average_rate);
-    println!();
+    print_strong_estimate_screen(STRONG_CHARSET_LABEL, local_average_rate);
 
     match estimate_strong_password(&strong_password, STRONG_CHARSET, local_average_rate) {
-        Some(estimate) => {
-            println!("Password analyzed: {}", estimate.password);
-            println!("Length: {}", estimate.password.len());
-            println!("Charset size: {}", estimate.charset_size);
-            println!("Estimated attempts: {}", estimate.estimated_attempts);
-            println!(
-                "Estimated brute-force time on this PC: {}",
-                format_duration(estimate.estimated_seconds)
-            );
-        }
-        None => {
-            println!("Unable to estimate this password.");
-        }
+        Some(estimate) => print_strong_estimate_result(&estimate),
+        None => print_estimate_failed(),
     }
 }
