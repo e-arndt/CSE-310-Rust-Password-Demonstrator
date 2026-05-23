@@ -29,9 +29,7 @@ pub fn clear_screen() {
 }
 
 fn print_app_header() {
-    println!("================= RustPassLab =================");
-    println!();
-    println!("Educational brute-force password strength demonstrator");
+    println!("================= Password Strength Demonstrator =================");
     println!();
 }
 
@@ -88,7 +86,10 @@ pub fn read_password_for_mode(mode: &PasswordMode) -> String {
         let input = input.trim().to_string();
 
         match validate_target(&input, mode) {
-            Ok(()) => return input,
+            Ok(()) => {
+                clear_screen();
+                return input;
+            }
             Err(message) => {
                 error_message = Some(message);
             }
@@ -96,10 +97,9 @@ pub fn read_password_for_mode(mode: &PasswordMode) -> String {
     }
 }
 
-pub fn print_bruteforce_progress_screen(mode: &PasswordMode, target_hash: &str) {
+pub fn print_bruteforce_progress_screen(_mode: &PasswordMode, target_hash: &str) {
     clear_screen();
     print_app_header();
-    print_mode_details(mode);
 
     println!("Target Password SHA-256 Hash: {}", target_hash);
     println!();
