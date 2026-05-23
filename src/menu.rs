@@ -1,5 +1,6 @@
 use std::io::{self, Write};
 use std::process::Command;
+use num_format::{Locale, ToFormattedString};
 
 use crate::models::CrackResult;
 use crate::strong_estimator::{format_duration, StrongEstimate};
@@ -97,13 +98,12 @@ pub fn read_password_for_mode(mode: &PasswordMode) -> String {
     }
 }
 
-pub fn print_bruteforce_progress_screen(_mode: &PasswordMode, target_hash: &str) {
+pub fn print_bruteforce_progress_screen(_mode: &PasswordMode) {
     clear_screen();
     print_app_header();
 
-    println!("Target Password SHA-256 Hash: {}", target_hash);
-    println!();
     println!("Brute-force in progress...");
+    println!();
 }
 
 pub fn print_crack_result(
@@ -113,6 +113,7 @@ pub fn print_crack_result(
 ) -> f64 {
     clear_screen();
     let rate = result.guesses_per_second();
+    print_app_header();
 
     println!("Target Password SHA-256 Hash: {}", target_hash);
     println!("**- Matched -** SHA-256 Hash: {}", result.matched_hash);
@@ -120,9 +121,15 @@ pub fn print_crack_result(
 
     println!("{}", mode.result_label);
     println!("Password: {}", result.password);
-    println!("Attempts: {}", result.attempts);
+    println!(
+    "Attempts: {}",
+        result.attempts.to_formatted_string(&Locale::en)
+    );
     println!("Elapsed time: {:.4} seconds", result.elapsed_seconds);
-    println!("Average rate: {:.0} guesses/sec", rate);
+    println!(
+    "Average rate: {} attempts/sec",
+        (rate as u64).to_formatted_string(&Locale::en)
+    );
 
     rate
 }
@@ -150,6 +157,8 @@ pub fn print_strong_estimate_result(estimate: &StrongEstimate) {
         "Estimated brute-force time on this PC: {}",
         format_duration(estimate.estimated_seconds)
     );
+    println!();
+    println!();
 }
 
 pub fn print_estimate_failed() {

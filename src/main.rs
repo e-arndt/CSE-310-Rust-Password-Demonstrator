@@ -23,7 +23,7 @@ fn run_bruteforce_demo(mode: &PasswordMode) -> Option<f64> {
     let target = read_password_for_mode(mode);
     let target_hash = hash_password(&target);
 
-    print_bruteforce_progress_screen(mode, &target_hash);
+    print_bruteforce_progress_screen(mode);
 
     let rate = match brute_force(&target_hash, mode.max_length, mode.charset) {
         Some(result) => Some(print_crack_result(mode, &target_hash, &result)),

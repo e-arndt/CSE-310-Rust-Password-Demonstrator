@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 sha2 = "0.10"
+num-format = "0.4"

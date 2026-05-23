@@ -1,7 +1,9 @@
 use std::time::Instant;
+use num_format::{Locale, ToFormattedString};
 
 use crate::hashing::hash_password;
 use crate::models::CrackResult;
+
 
 // Converts a numeric index into a password guess.
 // This works like counting in a custom base where each "digit" is a character
@@ -41,7 +43,15 @@ pub fn brute_force(
             let guess = index_to_guess(index, length, charset);
             attempts += 1;
 
+            if attempts % 100_000_000 == 0 {
+                println!(
+                    "Attempts: {}",
+                    attempts.to_formatted_string(&Locale::en)
+                );
+            }
+
             let guess_hash = hash_password(&guess);
+
 
             if guess_hash == target_hash {
                 let elapsed = start.elapsed().as_secs_f64();
