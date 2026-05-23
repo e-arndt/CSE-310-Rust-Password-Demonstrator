@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustPassLab Web GUI</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <h1>RustPassLab</h1>
+      <p>
+        Educational brute-force password demonstration using Rust logic,
+        hash comparison, and search-space estimates.
+      </p>
+    </section>
+
+    <section class="card-grid">
+      <article class="panel half-card">
+        <h2>Weak Password Demo</h2>
+        <p>
+          Actual brute-force demo for short lowercase-only passwords.
+        </p>
+        <button disabled>Coming Soon</button>
+      </article>
+
+      <article class="panel half-card">
+        <h2>Moderate Password Demo</h2>
+        <p>
+          Actual brute-force demo for mixed-case letters and digits.
+        </p>
+        <button disabled>Coming Soon</button>
+      </article>
+
+      <article class="panel full-card">
+        <h2>Strong Password Estimator</h2>
+        <p>
+          Estimate password complexity using the Rust backend.
+        </p>
+
+        <label for="passwordInput">Enter a password:</label>
+        <input id="passwordInput" type="text" placeholder="Example: Rust123!" />
+
+        <button id="analyzeButton">Estimate Password</button>
+
+        <div id="resultBox" class="result-box">
+          Results will appear here.
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
