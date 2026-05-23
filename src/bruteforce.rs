@@ -48,6 +48,7 @@ pub fn brute_force(
 
                 return Some(CrackResult {
                     password: guess,
+                    matched_hash: guess_hash,
                     attempts,
                     elapsed_seconds: elapsed,
                 });

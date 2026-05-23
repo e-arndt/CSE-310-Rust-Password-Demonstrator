@@ -1,6 +1,7 @@
 // Stores the final result of a successful brute-force search.
 pub struct CrackResult {
     pub password: String,
+    pub matched_hash: String,
     pub attempts: u64,
     pub elapsed_seconds: f64,
 }

@@ -13,7 +13,7 @@ use config::{
 };
 use hashing::hash_password;
 use menu::{
-    pause_for_enter, print_bruteforce_screen, print_crack_result, print_estimate_failed,
+    pause_for_enter, print_crack_result, print_estimate_failed,
     print_password_not_found, print_strong_estimate_result, print_strong_estimate_screen,
     read_password_for_mode, PasswordMode,
 };
@@ -23,10 +23,9 @@ fn run_bruteforce_demo(mode: &PasswordMode) -> Option<f64> {
     let target = read_password_for_mode(mode);
     let target_hash = hash_password(&target);
 
-    print_bruteforce_screen(mode, &target_hash);
 
     let rate = match brute_force(&target_hash, mode.max_length, mode.charset) {
-        Some(result) => Some(print_crack_result(&result)),
+        Some(result) => Some(print_crack_result(&target_hash, &result)),
         None => {
             print_password_not_found();
             None

@@ -104,10 +104,14 @@ pub fn print_bruteforce_screen(mode: &PasswordMode, target_hash: &str) {
     println!();
 }
 
-pub fn print_crack_result(result: &CrackResult) -> f64 {
+pub fn print_crack_result(target_hash: &str, result: &CrackResult) -> f64 {
     let rate = result.guesses_per_second();
 
     println!();
+    println!("Target Password SHA-256 Hash: {}", target_hash);
+    println!("**- Matched -** SHA-256 Hash: {}", result.matched_hash);
+    println!();
+
     println!("Password found!");
     println!("Password: {}", result.password);
     println!("Attempts: {}", result.attempts);
