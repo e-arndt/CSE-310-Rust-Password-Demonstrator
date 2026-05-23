@@ -13,7 +13,7 @@ use config::{
 };
 use hashing::hash_password;
 use menu::{
-    pause_for_enter, print_crack_result, print_estimate_failed,
+    pause_for_enter, print_bruteforce_progress_screen, print_crack_result, print_estimate_failed,
     print_password_not_found, print_strong_estimate_result, print_strong_estimate_screen,
     read_password_for_mode, PasswordMode,
 };
@@ -23,9 +23,10 @@ fn run_bruteforce_demo(mode: &PasswordMode) -> Option<f64> {
     let target = read_password_for_mode(mode);
     let target_hash = hash_password(&target);
 
+    print_bruteforce_progress_screen(mode, &target_hash);
 
     let rate = match brute_force(&target_hash, mode.max_length, mode.charset) {
-        Some(result) => Some(print_crack_result(&target_hash, &result)),
+        Some(result) => Some(print_crack_result(mode, &target_hash, &result)),
         None => {
             print_password_not_found();
             None
@@ -46,6 +47,7 @@ fn main() {
         charset: WEAK_CHARSET,
         validator: |c| c.is_ascii_lowercase(),
         validation_message: "Password must only contain lowercase letters a-z.",
+        result_label: "Weak Password found!",
     };
 
     let moderate_mode = PasswordMode {
@@ -56,6 +58,7 @@ fn main() {
         charset: MODERATE_CHARSET,
         validator: |c| c.is_ascii_alphanumeric(),
         validation_message: "Password must only contain letters A-Z, a-z, and digits 0-9.",
+        result_label: "Moderate Password found!",
     };
 
     let strong_mode = PasswordMode {
@@ -66,6 +69,7 @@ fn main() {
         charset: STRONG_CHARSET,
         validator: |c| STRONG_CHARSET.contains(&(c as u8)),
         validation_message: "Password must only contain supported letters, digits, and symbols.",
+        result_label: "Strong Password estimate",
     };
 
     let weak_rate = run_bruteforce_demo(&weak_mode);

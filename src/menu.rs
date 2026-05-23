@@ -12,6 +12,7 @@ pub struct PasswordMode {
     pub charset: &'static [u8],
     pub validator: fn(char) -> bool,
     pub validation_message: &'static str,
+    pub result_label: &'static str,
 }
 
 pub fn clear_screen() {
@@ -28,7 +29,7 @@ pub fn clear_screen() {
 }
 
 fn print_app_header() {
-    println!("*================ RustPassLab ================*");
+    println!("================= RustPassLab =================");
     println!();
     println!("Educational brute-force password strength demonstrator");
     println!();
@@ -95,24 +96,29 @@ pub fn read_password_for_mode(mode: &PasswordMode) -> String {
     }
 }
 
-pub fn print_bruteforce_screen(mode: &PasswordMode, target_hash: &str) {
+pub fn print_bruteforce_progress_screen(mode: &PasswordMode, target_hash: &str) {
     clear_screen();
     print_app_header();
     print_mode_details(mode);
 
-    println!("Target SHA-256 hash: {}", target_hash);
+    println!("Target Password SHA-256 Hash: {}", target_hash);
     println!();
+    println!("Brute-force in progress...");
 }
 
-pub fn print_crack_result(target_hash: &str, result: &CrackResult) -> f64 {
+pub fn print_crack_result(
+    mode: &PasswordMode,
+    target_hash: &str,
+    result: &CrackResult,
+) -> f64 {
+    clear_screen();
     let rate = result.guesses_per_second();
 
-    println!();
     println!("Target Password SHA-256 Hash: {}", target_hash);
     println!("**- Matched -** SHA-256 Hash: {}", result.matched_hash);
     println!();
 
-    println!("Password found!");
+    println!("{}", mode.result_label);
     println!("Password: {}", result.password);
     println!("Attempts: {}", result.attempts);
     println!("Elapsed time: {:.4} seconds", result.elapsed_seconds);
