@@ -7,8 +7,9 @@ use num_format::{Locale, ToFormattedString};
 use rust_pass_lab::{
     bruteforce::brute_force,
     config::{
-        MAX_STRONG_PASSWORD_LENGTH, MAX_WEAK_PASSWORD_LENGTH, STRONG_CHARSET,
-        STRONG_CHARSET_LABEL, WEAK_CHARSET,
+        MAX_MODERATE_PASSWORD_LENGTH, MAX_STRONG_PASSWORD_LENGTH, MAX_WEAK_PASSWORD_LENGTH,
+        MODERATE_CHARSET, STRONG_CHARSET, STRONG_CHARSET_LABEL,
+        WEAK_CHARSET,
     },
     hashing::hash_password,
     strong_estimator::{estimate_strong_password, format_duration},
@@ -52,6 +53,25 @@ struct WeakDemoRequest {
 struct WeakDemoResponse {
     status: String,
     password_found: String,
+    charset_size: usize,
+    attempts: String,
+    elapsed_seconds: f64,
+    guesses_per_second: String,
+    target_hash: String,
+    matched_hash: String,
+}
+
+
+#[derive(Deserialize)]
+struct ModerateDemoRequest {
+    password: String,
+}
+
+#[derive(Serialize)]
+struct ModerateDemoResponse {
+    status: String,
+    password_found: String,
+    charset_size: usize,
     attempts: String,
     elapsed_seconds: f64,
     guesses_per_second: String,
@@ -64,6 +84,7 @@ struct AppState {
     measured_rate: Arc<Mutex<Option<f64>>>,
 }
 */
+
 async fn api_test() -> Json<ApiResponse> {
     Json(ApiResponse {
         message: String::from("Rust server connection successful."),
@@ -144,6 +165,7 @@ async fn weak_demo(
         Some(result) => Ok(Json(WeakDemoResponse {
             status: String::from("found"),
             password_found: result.password.clone(),
+            charset_size: WEAK_CHARSET.len(),
             attempts: result.attempts.to_formatted_string(&Locale::en),
             elapsed_seconds: result.elapsed_seconds,
             guesses_per_second: (result.guesses_per_second() as u64)
@@ -154,6 +176,56 @@ async fn weak_demo(
         None => Err((
             StatusCode::NOT_FOUND,
             String::from("Password was not found in the weak search space."),
+        )),
+    }
+}
+
+async fn moderate_demo(
+    Json(payload): Json<ModerateDemoRequest>,
+) -> Result<Json<ModerateDemoResponse>, (StatusCode, String)> {
+    let password = payload.password.trim();
+
+    if password.is_empty() {
+        return Err((StatusCode::BAD_REQUEST, String::from("Password cannot be empty.")));
+    }
+
+    if password.len() > MAX_MODERATE_PASSWORD_LENGTH {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            format!(
+                "Moderate demo passwords must be {} characters or fewer.",
+                MAX_MODERATE_PASSWORD_LENGTH
+            ),
+        ));
+    }
+
+    if !password
+        .chars()
+        .all(|c| c.is_ascii_lowercase() || c.is_ascii_uppercase() || c.is_ascii_digit())
+    {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            String::from("Moderate passwords must contain letters and digits only."),
+        ));
+    }
+
+    let target_hash = hash_password(password);
+
+    match brute_force(&target_hash, MAX_MODERATE_PASSWORD_LENGTH, MODERATE_CHARSET) {
+        Some(result) => Ok(Json(ModerateDemoResponse {
+            status: String::from("found"),
+            password_found: result.password.clone(),
+            attempts: result.attempts.to_formatted_string(&Locale::en),
+            elapsed_seconds: result.elapsed_seconds,
+            guesses_per_second: (result.guesses_per_second() as u64)
+                .to_formatted_string(&Locale::en),
+            charset_size: MODERATE_CHARSET.len(),
+            target_hash,
+            matched_hash: result.matched_hash,
+        })),
+        None => Err((
+            StatusCode::NOT_FOUND,
+            String::from("Password was not found in the moderate search space."),
         )),
     }
 }
@@ -169,6 +241,7 @@ async fn main() {
         .route("/api/test", get(api_test))
         .route("/api/estimate", post(estimate_password))
         .route("/api/weak-demo", post(weak_demo))
+        .route("/api/moderate-demo", post(moderate_demo))
         .layer(cors);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));

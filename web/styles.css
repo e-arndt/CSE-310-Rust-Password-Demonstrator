@@ -1,3 +1,7 @@
+/* ================================
+   Base page layout
+================================ */
+
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -6,16 +10,21 @@ body {
 }
 
 .page {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 2px 20px;
 }
 
+/* ================================
+   Hero section
+================================ */
+
 .hero {
-  margin-bottom: 30px;
+  margin-bottom: 10px;
 }
 
 .hero h1 {
+  text-align: center;
   font-size: 3rem;
   margin-bottom: 10px;
 }
@@ -24,6 +33,10 @@ body {
   font-size: 1.1rem;
   color: #c7d0d9;
 }
+
+/* ================================
+   Card layout
+================================ */
 
 .card-grid {
   display: grid;
@@ -35,7 +48,7 @@ body {
   background: #182635;
   border: 1px solid #31465a;
   border-radius: 12px;
-  padding: 24px;
+  padding: 5px 20px 20px;
 }
 
 .full-card {
@@ -45,6 +58,10 @@ body {
 .panel p {
   color: #c7d0d9;
 }
+
+/* ================================
+   Forms and buttons
+================================ */
 
 label {
   display: block;
@@ -80,16 +97,66 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* ================================
+   Demo explanation and results
+================================ */
+
+.demo-info {
+  margin: 16px 0;
+  padding: 12px;
+  background: #0f1a24;
+  border: 1px solid #31465a;
+  border-radius: 8px;
+  color: #d7e3ea;
+  line-height: 1.5;
+}
+
 .result-box {
   margin-top: 20px;
+  min-height: 210px;
   padding: 16px;
   background: #0b1118;
   border: 1px solid #31465a;
   border-radius: 8px;
   color: #d7e3ea;
+  line-height: 1.35;
+  overflow-wrap: break-word;
 }
 
+/* ================================
+   Hash comparison display
+================================ */
+
+.hash-comparison {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  gap: 48px;
+  margin-top: 10px;
+  align-items: start;
+}
+
+.hash-chunks {
+  margin-top: 8px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+}
+
+.hash-chunks span {
+  display: block;
+  white-space: nowrap;
+}
+
+/* ================================
+   Mobile layout
+================================ */
+
 @media (max-width: 700px) {
+  .page {
+    padding: 30px 14px;
+  }
+
   .card-grid {
     grid-template-columns: 1fr;
   }
@@ -100,5 +167,18 @@ button:disabled {
 
   .hero h1 {
     font-size: 2.3rem;
+  }
+
+  .panel {
+    padding: 20px;
+  }
+
+  .hash-comparison {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .hash-chunks {
+    font-size: 0.86rem;
   }
 }

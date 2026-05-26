@@ -9,7 +9,7 @@
 <body>
   <main class="page">
     <section class="hero">
-      <h1>RustPassLab</h1>
+      <h1>Password Strength Demonstration</h1>
       <p>
         Educational brute-force password demonstration using Rust logic,
         hash comparison, and search-space estimates.
@@ -22,7 +22,10 @@
         <p>
           Actual brute-force demo for short lowercase-only passwords.
         </p>
-
+        <div class="demo-info">
+          <strong>Character set:</strong> lowercase letters a-z<br>
+          <strong>Demo limit:</strong> up to 5 characters
+        </div>
         <label for="weakPasswordInput">Enter weak password:</label>
         <input id="weakPasswordInput" type="text" placeholder="Example: apple" />
 
@@ -38,7 +41,18 @@
         <p>
           Actual brute-force demo for mixed-case letters and digits.
         </p>
-        <button disabled>Coming Soon</button>
+        <div class="demo-info">
+          <strong>Character set:</strong> lowercase a-z, uppercase A-Z, and digits 0-9<br>
+          <strong>Demo limit:</strong> up to 5 characters
+        </div>
+        <label for="moderatePasswordInput">Enter moderate password:</label>
+        <input id="moderatePasswordInput" type="text" placeholder="Example: Zx9" />
+
+        <button id="moderateDemoButton">Run Moderate Demo</button>
+
+        <div id="moderateResultBox" class="result-box">
+          Moderate demo results will appear here.
+        </div>
       </article>
 
       <article class="panel full-card">
