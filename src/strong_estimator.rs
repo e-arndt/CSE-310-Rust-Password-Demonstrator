@@ -17,22 +17,12 @@ pub fn estimate_strong_password(
     let base = charset.len() as u128;
     let password_bytes = password.as_bytes();
 
-    let mut attempts_before_length: u128 = 0;
-
-    for length in 1..password_bytes.len() {
-        attempts_before_length += base.pow(length as u32);
+    for byte in password_bytes {
+        charset.iter().position(|c| c == byte)?;
     }
 
-    let mut position_in_length: u128 = 0;
-
-    for (position, byte) in password_bytes.iter().enumerate() {
-        let char_index = charset.iter().position(|c| c == byte)? as u128;
-        let power = password_bytes.len() - position - 1;
-
-        position_in_length += char_index * base.pow(power as u32);
-    }
-
-    let estimated_attempts = attempts_before_length + position_in_length + 1;
+    let total_combinations = base.pow(password_bytes.len() as u32);
+    let estimated_attempts = total_combinations.div_ceil(2).max(1);
     let estimated_seconds = estimated_attempts as f64 / guesses_per_second;
 
     Some(StrongEstimate {

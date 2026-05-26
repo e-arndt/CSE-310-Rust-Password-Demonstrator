@@ -21,7 +21,7 @@ use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
 use std::sync::{Arc, Mutex};
 
-const DEFAULT_LOCAL_RATE: f64 = 9_000_000.0;
+const DEFAULT_LOCAL_RATE: f64 = 5_000_000.0;
 
 #[derive(Serialize)]
 struct ApiResponse {
@@ -134,7 +134,7 @@ async fn estimate_password(
     let local_rate = measured_rate.unwrap_or(DEFAULT_LOCAL_RATE);
 
     let rate_source = if measured_rate.is_some() {
-        String::from("measured from latest demo")
+        String::from("measured from local CPU")
     } else {
         String::from("default estimate")
     };
