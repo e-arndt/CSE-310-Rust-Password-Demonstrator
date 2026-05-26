@@ -1,8 +1,10 @@
 use axum::{
+    extract::State,
     http::StatusCode,
     routing::{get, post},
     Json, Router,
 };
+
 use num_format::{Locale, ToFormattedString};
 use rust_pass_lab::{
     bruteforce::brute_force,
@@ -17,7 +19,7 @@ use rust_pass_lab::{
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
-// use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex};
 
 const DEFAULT_LOCAL_RATE: f64 = 9_000_000.0;
 
@@ -39,6 +41,7 @@ struct EstimateResponse {
     charset_label: String,
     charset_size: u64,
     local_rate: String,
+    rate_source: String,
     estimated_attempts: String,
     estimated_seconds: f64,
     estimated_time: String,
@@ -79,11 +82,10 @@ struct ModerateDemoResponse {
     matched_hash: String,
 }
 
-/*#[derive(Clone)]
+#[derive(Clone)]
 struct AppState {
     measured_rate: Arc<Mutex<Option<f64>>>,
 }
-*/
 
 async fn api_test() -> Json<ApiResponse> {
     Json(ApiResponse {
@@ -93,6 +95,7 @@ async fn api_test() -> Json<ApiResponse> {
 }
 
 async fn estimate_password(
+    State(state): State<AppState>,
     Json(payload): Json<EstimateRequest>,
 ) -> Result<Json<EstimateResponse>, (StatusCode, String)> {
     let password = payload.password.trim();
@@ -118,7 +121,25 @@ async fn estimate_password(
         ));
     }
 
-    let estimate = estimate_strong_password(password, STRONG_CHARSET, DEFAULT_LOCAL_RATE)
+    let measured_rate = *state
+        .measured_rate
+        .lock()
+        .map_err(|_| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                String::from("Failed to read measured CPU rate."),
+            )
+        })?;
+
+    let local_rate = measured_rate.unwrap_or(DEFAULT_LOCAL_RATE);
+
+    let rate_source = if measured_rate.is_some() {
+        String::from("measured from latest demo")
+    } else {
+        String::from("default estimate")
+    };
+
+    let estimate = estimate_strong_password(password, STRONG_CHARSET, local_rate)
         .ok_or((StatusCode::BAD_REQUEST, String::from("Estimate failed.")))?;
 
     Ok(Json(EstimateResponse {
@@ -126,7 +147,8 @@ async fn estimate_password(
         password_length: password.len(),
         charset_label: STRONG_CHARSET_LABEL.to_string(),
         charset_size: estimate.charset_size,
-        local_rate: (DEFAULT_LOCAL_RATE as u64).to_formatted_string(&Locale::en),
+        local_rate: (local_rate as u64).to_formatted_string(&Locale::en),
+        rate_source,
         estimated_attempts: estimate.estimated_attempts.to_formatted_string(&Locale::en),
         estimated_seconds: estimate.estimated_seconds,
         estimated_time: format_duration(estimate.estimated_seconds),
@@ -134,6 +156,7 @@ async fn estimate_password(
 }
 
 async fn weak_demo(
+    State(state): State<AppState>,
     Json(payload): Json<WeakDemoRequest>,
 ) -> Result<Json<WeakDemoResponse>, (StatusCode, String)> {
     let password = payload.password.trim();
@@ -162,17 +185,34 @@ async fn weak_demo(
     let target_hash = hash_password(password);
 
     match brute_force(&target_hash, MAX_WEAK_PASSWORD_LENGTH, WEAK_CHARSET) {
-        Some(result) => Ok(Json(WeakDemoResponse {
-            status: String::from("found"),
-            password_found: result.password.clone(),
-            charset_size: WEAK_CHARSET.len(),
-            attempts: result.attempts.to_formatted_string(&Locale::en),
-            elapsed_seconds: result.elapsed_seconds,
-            guesses_per_second: (result.guesses_per_second() as u64)
-                .to_formatted_string(&Locale::en),
-            target_hash,
-            matched_hash: result.matched_hash,
-        })),
+        Some(result) => {
+            let measured_rate = result.guesses_per_second();
+
+            {
+                let mut stored_rate = state
+                    .measured_rate
+                    .lock()
+                    .map_err(|_| {
+                        (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            String::from("Failed to store measured CPU rate."),
+                        )
+                    })?;
+
+                *stored_rate = Some(measured_rate);
+            }
+
+            Ok(Json(WeakDemoResponse {
+                status: String::from("found"),
+                password_found: result.password.clone(),
+                charset_size: WEAK_CHARSET.len(),
+                attempts: result.attempts.to_formatted_string(&Locale::en),
+                elapsed_seconds: result.elapsed_seconds,
+                guesses_per_second: (measured_rate as u64).to_formatted_string(&Locale::en),
+                target_hash,
+                matched_hash: result.matched_hash,
+            }))
+        }
         None => Err((
             StatusCode::NOT_FOUND,
             String::from("Password was not found in the weak search space."),
@@ -181,6 +221,7 @@ async fn weak_demo(
 }
 
 async fn moderate_demo(
+    State(state): State<AppState>,
     Json(payload): Json<ModerateDemoRequest>,
 ) -> Result<Json<ModerateDemoResponse>, (StatusCode, String)> {
     let password = payload.password.trim();
@@ -212,17 +253,34 @@ async fn moderate_demo(
     let target_hash = hash_password(password);
 
     match brute_force(&target_hash, MAX_MODERATE_PASSWORD_LENGTH, MODERATE_CHARSET) {
-        Some(result) => Ok(Json(ModerateDemoResponse {
-            status: String::from("found"),
-            password_found: result.password.clone(),
-            attempts: result.attempts.to_formatted_string(&Locale::en),
-            elapsed_seconds: result.elapsed_seconds,
-            guesses_per_second: (result.guesses_per_second() as u64)
-                .to_formatted_string(&Locale::en),
-            charset_size: MODERATE_CHARSET.len(),
-            target_hash,
-            matched_hash: result.matched_hash,
-        })),
+        Some(result) => {
+            let measured_rate = result.guesses_per_second();
+
+            {
+                let mut stored_rate = state
+                    .measured_rate
+                    .lock()
+                    .map_err(|_| {
+                        (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            String::from("Failed to store measured CPU rate."),
+                        )
+                    })?;
+
+                *stored_rate = Some(measured_rate);
+            }
+
+            Ok(Json(ModerateDemoResponse {
+                status: String::from("found"),
+                password_found: result.password.clone(),
+                attempts: result.attempts.to_formatted_string(&Locale::en),
+                elapsed_seconds: result.elapsed_seconds,
+                guesses_per_second: (measured_rate as u64).to_formatted_string(&Locale::en),
+                charset_size: MODERATE_CHARSET.len(),
+                target_hash,
+                matched_hash: result.matched_hash,
+            }))
+        }
         None => Err((
             StatusCode::NOT_FOUND,
             String::from("Password was not found in the moderate search space."),
@@ -237,11 +295,16 @@ async fn main() {
         .allow_methods(Any)
         .allow_headers(Any);
 
+    let state = AppState {
+        measured_rate: Arc::new(Mutex::new(None)),
+    };
+
     let app = Router::new()
         .route("/api/test", get(api_test))
         .route("/api/estimate", post(estimate_password))
         .route("/api/weak-demo", post(weak_demo))
         .route("/api/moderate-demo", post(moderate_demo))
+        .with_state(state)
         .layer(cors);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));

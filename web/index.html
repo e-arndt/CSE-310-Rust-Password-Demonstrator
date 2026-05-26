@@ -59,8 +59,15 @@
       <article class="panel full-card">
         <h2>Strong Password Estimator</h2>
         <p>
-          Estimate password complexity using the Rust backend.
+          Estimate how difficult a stronger password would be to brute-force using the
+          Rust backend and the latest measured local CPU rate.
         </p>
+
+        <div class="demo-info">
+          <strong>Character set:</strong> lowercase a-z, uppercase A-Z, digits 0-9, and common symbols<br>
+          <strong>Estimate limit:</strong> up to 8 characters<br>
+          <strong>What it shows:</strong> larger character sets and longer passwords greatly increase the number of possible combinations.
+        </div>
 
         <label for="passwordInput">Enter a password:</label>
         <input id="passwordInput" type="text" placeholder="Example: Rust123!" />
@@ -72,6 +79,15 @@
         </div>
       </article>
     </section>
+
+    <footer class="page-footer">
+      <div class="footer-box">
+        <p>Module 2 &mdash;
+        Rust &mdash;
+        Password Strength Demonstrator</p>
+        <span>&copy; <span id="currentYear"></span> Eric Arndt - CSE-310</span>
+      </div>
+    </footer>
   </main>
 
   <script src="app.js"></script>

@@ -16,8 +16,14 @@ const moderatePasswordPattern = /^[A-Za-z0-9]+$/;
 
 const strongCharsetPattern = /^[A-Za-z0-9!@#$%^&*()\-_=\+\[\]{};:,.<>?\/|]+$/;
 
+const currentYear = document.getElementById("currentYear");
+
+if (currentYear) {
+  currentYear.textContent = new Date().getFullYear();
+}
 
 let demoRunning = false;
+
 
 function setDemoControlsDisabled(disabled) {
   weakPasswordInput.disabled = disabled;
@@ -245,7 +251,8 @@ analyzeButton.addEventListener("click", async () => {
       <strong>Password Length:</strong> ${data.password_length}<br>
       <strong>Charset:</strong> ${data.charset_label}<br>
       <strong>Charset Size:</strong> ${data.charset_size}<br>
-      <strong>Local Rate:</strong> ${data.local_rate} guesses/sec<br><br>
+      <strong>Local Rate:</strong> ${data.local_rate} guesses/sec<br>
+      <strong>Rate Source:</strong> ${data.rate_source}<br><br>
 
       <strong>Estimated Attempts:</strong> ${data.estimated_attempts}<br>
       <strong>Estimated Time:</strong> ${data.estimated_time}
