@@ -5,12 +5,18 @@ use axum::{
 };
 use num_format::{Locale, ToFormattedString};
 use rust_pass_lab::{
-    config::{MAX_STRONG_PASSWORD_LENGTH, STRONG_CHARSET, STRONG_CHARSET_LABEL},
+    bruteforce::brute_force,
+    config::{
+        MAX_STRONG_PASSWORD_LENGTH, MAX_WEAK_PASSWORD_LENGTH, STRONG_CHARSET,
+        STRONG_CHARSET_LABEL, WEAK_CHARSET,
+    },
+    hashing::hash_password,
     strong_estimator::{estimate_strong_password, format_duration},
 };
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
+// use std::sync::{Arc, Mutex};
 
 const DEFAULT_LOCAL_RATE: f64 = 9_000_000.0;
 
@@ -37,6 +43,27 @@ struct EstimateResponse {
     estimated_time: String,
 }
 
+#[derive(Deserialize)]
+struct WeakDemoRequest {
+    password: String,
+}
+
+#[derive(Serialize)]
+struct WeakDemoResponse {
+    status: String,
+    password_found: String,
+    attempts: String,
+    elapsed_seconds: f64,
+    guesses_per_second: String,
+    target_hash: String,
+    matched_hash: String,
+}
+
+/*#[derive(Clone)]
+struct AppState {
+    measured_rate: Arc<Mutex<Option<f64>>>,
+}
+*/
 async fn api_test() -> Json<ApiResponse> {
     Json(ApiResponse {
         message: String::from("Rust server connection successful."),
@@ -85,6 +112,52 @@ async fn estimate_password(
     }))
 }
 
+async fn weak_demo(
+    Json(payload): Json<WeakDemoRequest>,
+) -> Result<Json<WeakDemoResponse>, (StatusCode, String)> {
+    let password = payload.password.trim();
+
+    if password.is_empty() {
+        return Err((StatusCode::BAD_REQUEST, String::from("Password cannot be empty.")));
+    }
+
+    if password.len() > MAX_WEAK_PASSWORD_LENGTH {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            format!(
+                "Weak demo passwords must be {} characters or fewer.",
+                MAX_WEAK_PASSWORD_LENGTH
+            ),
+        ));
+    }
+
+    if !password.chars().all(|c| c.is_ascii_lowercase()) {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            String::from("Weak passwords must contain lowercase letters only."),
+        ));
+    }
+
+    let target_hash = hash_password(password);
+
+    match brute_force(&target_hash, MAX_WEAK_PASSWORD_LENGTH, WEAK_CHARSET) {
+        Some(result) => Ok(Json(WeakDemoResponse {
+            status: String::from("found"),
+            password_found: result.password.clone(),
+            attempts: result.attempts.to_formatted_string(&Locale::en),
+            elapsed_seconds: result.elapsed_seconds,
+            guesses_per_second: (result.guesses_per_second() as u64)
+                .to_formatted_string(&Locale::en),
+            target_hash,
+            matched_hash: result.matched_hash,
+        })),
+        None => Err((
+            StatusCode::NOT_FOUND,
+            String::from("Password was not found in the weak search space."),
+        )),
+    }
+}
+
 #[tokio::main]
 async fn main() {
     let cors = CorsLayer::new()
@@ -95,6 +168,7 @@ async fn main() {
     let app = Router::new()
         .route("/api/test", get(api_test))
         .route("/api/estimate", post(estimate_password))
+        .route("/api/weak-demo", post(weak_demo))
         .layer(cors);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
