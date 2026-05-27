@@ -1,9 +1,19 @@
+// ================================
+// Module declarations
+// Connects the CLI binary to the project source modules.
+// ================================
+
 mod bruteforce;
 mod config;
 mod hashing;
 mod menu;
 mod models;
 mod strong_estimator;
+
+// ================================
+// Imports
+// Brings brute-force logic, configuration values, menu helpers, and estimator tools into scope.
+// ================================
 
 use bruteforce::brute_force;
 use config::{
@@ -18,6 +28,11 @@ use menu::{
     read_password_for_mode, PasswordMode,
 };
 use strong_estimator::estimate_strong_password;
+
+// ================================
+// Brute-force demo runner
+// Handles one CLI brute-force demo and returns the measured guesses-per-second rate.
+// ================================
 
 fn run_bruteforce_demo(mode: &PasswordMode) -> Option<f64> {
     let target = read_password_for_mode(mode);
@@ -37,6 +52,11 @@ fn run_bruteforce_demo(mode: &PasswordMode) -> Option<f64> {
 
     rate
 }
+
+// ================================
+// CLI application entry point
+// Builds the password demo modes, runs the demos, and prints the strong estimate.
+// ================================
 
 fn main() {
     let weak_mode = PasswordMode {

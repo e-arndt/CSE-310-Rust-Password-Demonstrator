@@ -1,9 +1,19 @@
+// ================================
+// Imports
+// Standard input/output tools, terminal commands, formatting helpers, and project models.
+// ================================
+
 use std::io::{self, Write};
 use std::process::Command;
 use num_format::{Locale, ToFormattedString};
 
 use crate::models::CrackResult;
 use crate::strong_estimator::{format_duration, StrongEstimate};
+
+// ================================
+// Password mode configuration
+// Defines the labels, limits, character sets, and validation rules for each CLI mode.
+// ================================
 
 pub struct PasswordMode {
     pub title: &'static str,
@@ -15,6 +25,11 @@ pub struct PasswordMode {
     pub validation_message: &'static str,
     pub result_label: &'static str,
 }
+
+// ================================
+// Terminal display helpers
+// Clears the screen and prints shared CLI header information.
+// ================================
 
 pub fn clear_screen() {
     if cfg!(target_os = "windows") {
@@ -33,6 +48,11 @@ fn print_app_header() {
     println!("================= Password Strength Demonstrator =================");
     println!();
 }
+
+// ================================
+// Input validation
+// Checks user-entered passwords against the selected demo mode rules.
+// ================================
 
 fn validate_target(target: &str, mode: &PasswordMode) -> Result<(), String> {
     if target.is_empty() {
@@ -53,6 +73,11 @@ fn validate_target(target: &str, mode: &PasswordMode) -> Result<(), String> {
     Ok(())
 }
 
+// ================================
+// Mode information display
+// Prints the title, password length limit, and character set for the selected mode.
+// ================================
+
 fn print_mode_details(mode: &PasswordMode) {
     println!("{}", mode.title);
     println!();
@@ -60,6 +85,11 @@ fn print_mode_details(mode: &PasswordMode) {
     println!("Charset: {}", mode.charset_label);
     println!();
 }
+
+// ================================
+// Password input workflow
+// Repeats input prompts until the user enters a password valid for the selected mode.
+// ================================
 
 pub fn read_password_for_mode(mode: &PasswordMode) -> String {
     let mut error_message: Option<String> = None;
@@ -98,6 +128,11 @@ pub fn read_password_for_mode(mode: &PasswordMode) -> String {
     }
 }
 
+// ================================
+// Brute-force progress display
+// Shows the CLI screen while a brute-force demo is running.
+// ================================
+
 pub fn print_bruteforce_progress_screen(_mode: &PasswordMode) {
     clear_screen();
     print_app_header();
@@ -105,6 +140,11 @@ pub fn print_bruteforce_progress_screen(_mode: &PasswordMode) {
     println!("Brute-force in progress...");
     println!();
 }
+
+// ================================
+// Brute-force result display
+// Prints matched hash details, discovered password, attempts, elapsed time, and local rate.
+// ================================
 
 pub fn print_crack_result(
     mode: &PasswordMode,
@@ -134,9 +174,19 @@ pub fn print_crack_result(
     rate
 }
 
+// ================================
+// Not-found message
+// Prints the fallback message when a password is outside the configured search space.
+// ================================
+
 pub fn print_password_not_found() {
     println!("Password was not found within the configured search space.");
 }
+
+// ================================
+// Strong estimate intro display
+// Prints the strong password estimate heading, charset, and measured local rate.
+// ================================
 
 pub fn print_strong_estimate_screen(charset_label: &str, local_average_rate: f64) {
     clear_screen();
@@ -147,6 +197,11 @@ pub fn print_strong_estimate_screen(charset_label: &str, local_average_rate: f64
     println!("Local measured rate: {:.0} guesses/sec", local_average_rate);
     println!();
 }
+
+// ================================
+// Strong estimate result display
+// Prints average-case brute-force estimate details for the strong password mode.
+// ================================
 
 pub fn print_strong_estimate_result(estimate: &StrongEstimate) {
     println!("Password analyzed: {}", estimate.password);
@@ -161,9 +216,19 @@ pub fn print_strong_estimate_result(estimate: &StrongEstimate) {
     println!();
 }
 
+// ================================
+// Estimate failure message
+// Prints the fallback message when a strong password estimate cannot be calculated.
+// ================================
+
 pub fn print_estimate_failed() {
     println!("Unable to estimate this password.");
 }
+
+// ================================
+// Pause prompt
+// Waits for the user to press Enter before continuing the CLI flow.
+// ================================
 
 pub fn pause_for_enter() {
     println!();

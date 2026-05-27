@@ -1,3 +1,8 @@
+// ================================
+// Brute-force result model
+// Stores the final data from a successful password brute-force search.
+// ================================
+
 // Stores the final result of a successful brute-force search.
 pub struct CrackResult {
     pub password: String,
@@ -5,6 +10,11 @@ pub struct CrackResult {
     pub attempts: u64,
     pub elapsed_seconds: f64,
 }
+
+// ================================
+// Brute-force result calculations
+// Provides helper calculations based on the completed brute-force result.
+// ================================
 
 impl CrackResult {
     // Calculates the average number of guesses checked per second.

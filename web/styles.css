@@ -150,7 +150,7 @@ button:disabled {
 }
 
 /* ================================
-   Footer Section
+   Footer section
 ================================ */
 .page-footer {
   margin-top: 18px;
@@ -179,12 +179,11 @@ button:disabled {
   margin: 10px 0;
 }
 
-
 /* ================================
    Mobile layout
 ================================ */
 
-@media (max-width: 700px) {
+@media (max-width: 850px) {
   .page {
     padding: 30px 14px;
   }

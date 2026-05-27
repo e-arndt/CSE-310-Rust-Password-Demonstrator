@@ -1,9 +1,19 @@
+// ================================
+// Strong password estimate model
+// Stores average-case brute-force estimate results for stronger passwords.
+// ================================
+
 pub struct StrongEstimate {
     pub password: String,
     pub charset_size: u64,
     pub estimated_attempts: u128,
     pub estimated_seconds: f64,
 }
+
+// ================================
+// Strong password estimator
+// Estimates average brute-force difficulty using charset size, password length, and local rate.
+// ================================
 
 pub fn estimate_strong_password(
     password: &str,
@@ -32,6 +42,11 @@ pub fn estimate_strong_password(
         estimated_seconds,
     })
 }
+
+// ================================
+// Duration formatter
+// Converts estimated seconds into a readable time unit for CLI and web output.
+// ================================
 
 pub fn format_duration(seconds: f64) -> String {
     let minutes = seconds / 60.0;

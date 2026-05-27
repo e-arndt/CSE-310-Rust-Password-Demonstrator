@@ -1,3 +1,8 @@
+// ================================
+// Imports
+// External crates and project modules used by the backend server.
+// ================================
+
 use axum::{
     extract::State,
     http::StatusCode,
@@ -18,10 +23,21 @@ use rust_pass_lab::{
 };
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
-use tower_http::cors::{Any, CorsLayer};
 use std::sync::{Arc, Mutex};
+use tower_http::cors::{Any, CorsLayer};
+
+
+// ================================
+// Constants
+// Shared fixed values used by the backend server.
+// ================================
 
 const DEFAULT_LOCAL_RATE: f64 = 5_000_000.0;
+
+// ================================
+// API request and response models
+// JSON payload structures used by the frontend and backend.
+// ================================
 
 #[derive(Serialize)]
 struct ApiResponse {
@@ -64,7 +80,6 @@ struct WeakDemoResponse {
     matched_hash: String,
 }
 
-
 #[derive(Deserialize)]
 struct ModerateDemoRequest {
     password: String,
@@ -82,11 +97,22 @@ struct ModerateDemoResponse {
     matched_hash: String,
 }
 
+// ================================
+// Shared application state
+// Stores the latest measured brute-force rate while the server is running.
+// ================================
+
 #[derive(Clone)]
 struct AppState {
     measured_rate: Arc<Mutex<Option<f64>>>,
 }
 
+// ================================
+// API route handlers
+// Handles frontend requests for connection testing, brute-force demos, and estimates.
+// ================================
+
+// Confirms that the Rust backend is reachable from the frontend.
 async fn api_test() -> Json<ApiResponse> {
     Json(ApiResponse {
         message: String::from("Rust server connection successful."),
@@ -94,6 +120,7 @@ async fn api_test() -> Json<ApiResponse> {
     })
 }
 
+// Estimates strong password difficulty using the latest measured or default CPU rate.
 async fn estimate_password(
     State(state): State<AppState>,
     Json(payload): Json<EstimateRequest>,
@@ -155,6 +182,7 @@ async fn estimate_password(
     }))
 }
 
+// Runs the lowercase-only brute-force demo and stores the measured CPU rate.
 async fn weak_demo(
     State(state): State<AppState>,
     Json(payload): Json<WeakDemoRequest>,
@@ -220,6 +248,7 @@ async fn weak_demo(
     }
 }
 
+// Runs the mixed-case-and-digits brute-force demo and stores the measured CPU rate.
 async fn moderate_demo(
     State(state): State<AppState>,
     Json(payload): Json<ModerateDemoRequest>,
@@ -287,6 +316,11 @@ async fn moderate_demo(
         )),
     }
 }
+
+// ================================
+// Server startup
+// Builds the Axum router, registers API routes, and starts the local server.
+// ================================
 
 #[tokio::main]
 async fn main() {

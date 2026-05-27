@@ -1,9 +1,18 @@
+// ================================
+// Imports
+// Standard library tools, formatting helpers, and project modules.
+// ================================
+
 use std::time::Instant;
 use num_format::{Locale, ToFormattedString};
 
 use crate::hashing::hash_password;
 use crate::models::CrackResult;
 
+// ================================
+// Guess generation
+// Converts numeric indexes into password guesses using the selected charset.
+// ================================
 
 // Converts a numeric index into a password guess.
 // This works like counting in a custom base where each "digit" is a character
@@ -21,6 +30,11 @@ fn index_to_guess(mut index: u64, length: usize, charset: &[u8]) -> String {
 
     String::from_utf8(buffer).expect("Generated guess should be valid UTF-8")
 }
+
+// ================================
+// Brute-force engine
+// Runs deterministic hash-matching searches for the demo password modes.
+// ================================
 
 // Runs a deterministic brute-force search against the target hash.
 // The search starts with shorter passwords first and then increases length,
@@ -51,7 +65,6 @@ pub fn brute_force(
             }
 
             let guess_hash = hash_password(&guess);
-
 
             if guess_hash == target_hash {
                 let elapsed = start.elapsed().as_secs_f64();

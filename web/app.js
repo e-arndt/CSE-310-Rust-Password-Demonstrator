@@ -1,3 +1,8 @@
+// ================================
+// DOM element references
+// Connects JavaScript logic to the web page inputs, buttons, and result boxes.
+// ================================
+
 const passwordInput = document.getElementById("passwordInput");
 const analyzeButton = document.getElementById("analyzeButton");
 const resultBox = document.getElementById("resultBox");
@@ -18,12 +23,26 @@ const strongCharsetPattern = /^[A-Za-z0-9!@#$%^&*()\-_=\+\[\]{};:,.<>?\/|]+$/;
 
 const currentYear = document.getElementById("currentYear");
 
+// ================================
+// Footer year setup
+// Updates the footer year automatically when the page loads.
+// ================================
+
 if (currentYear) {
   currentYear.textContent = new Date().getFullYear();
 }
 
+// ================================
+// Demo run state
+// Tracks whether a brute-force demo is already running.
+// ================================
+
 let demoRunning = false;
 
+// ================================
+// Demo control locking
+// Enables or disables both real brute-force demo controls at the same time.
+// ================================
 
 function setDemoControlsDisabled(disabled) {
   weakPasswordInput.disabled = disabled;
@@ -32,6 +51,11 @@ function setDemoControlsDisabled(disabled) {
   moderatePasswordInput.disabled = disabled;
   moderateDemoButton.disabled = disabled;
 }
+
+// ================================
+// Hash chunk formatter
+// Splits long SHA-256 hashes into shorter display chunks.
+// ================================
 
 function splitHashIntoChunks(hash, chunkSize = 16) {
   if (!hash) {
@@ -46,6 +70,11 @@ function splitHashIntoChunks(hash, chunkSize = 16) {
 
   return chunks;
 }
+
+// ================================
+// Hash comparison renderer
+// Builds the side-by-side hash comparison display for demo results.
+// ================================
 
 function renderHashComparison(targetHash, matchedHash) {
   const targetChunks = splitHashIntoChunks(targetHash);
@@ -69,6 +98,11 @@ function renderHashComparison(targetHash, matchedHash) {
     </div>
   `;
 }
+
+// ================================
+// Weak password demo handler
+// Validates lowercase-only input, calls the Rust weak-demo API, and renders results.
+// ================================
 
 weakDemoButton.addEventListener("click", async () => {
   const password = weakPasswordInput.value.trim();
@@ -139,6 +173,11 @@ weakDemoButton.addEventListener("click", async () => {
 });
 
 
+// ================================
+// Moderate password demo handler
+// Validates mixed-case letter/digit input, calls the Rust moderate-demo API, and renders results.
+// ================================
+
 moderateDemoButton.addEventListener("click", async () => {
   const password = moderatePasswordInput.value.trim();
 
@@ -207,6 +246,11 @@ moderateDemoButton.addEventListener("click", async () => {
   }
 });
 
+
+// ================================
+// Strong password estimator handler
+// Validates stronger password input, calls the Rust estimate API, and renders estimate results.
+// ================================
 
 analyzeButton.addEventListener("click", async () => {
   const password = passwordInput.value.trim();

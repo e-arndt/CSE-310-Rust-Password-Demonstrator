@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- ================================
+       Page metadata
+       Defines character encoding, responsive viewport behavior, title, favicon, and stylesheet.
+  ================================= -->
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rust Password Demo Web GUI</title>
@@ -9,6 +14,11 @@
 </head>
 <body>
   <main class="page">
+    <!-- ================================
+         Hero section
+         Introduces the password strength demonstration page.
+    ================================= -->
+
     <section class="hero">
       <h1>Password Strength Demonstration</h1>
       <p>
@@ -17,7 +27,17 @@
       </p>
     </section>
 
+    <!-- ================================
+         Demo card layout
+         Contains the weak, moderate, and strong password demonstration panels.
+    ================================= -->
+
     <section class="card-grid">
+      <!-- ================================
+           Weak password demo card
+           Runs a real lowercase-only brute-force demonstration.
+      ================================= -->
+
       <article class="panel half-card">
         <h2>Weak Password Demo</h2>
         <p>
@@ -37,6 +57,11 @@
         </div>
       </article>
 
+      <!-- ================================
+           Moderate password demo card
+           Runs a real mixed-case letter and digit brute-force demonstration.
+      ================================= -->
+
       <article class="panel half-card">
         <h2>Moderate Password Demo</h2>
         <p>
@@ -55,6 +80,11 @@
           Moderate demo results will appear here.
         </div>
       </article>
+
+      <!-- ================================
+           Strong password estimator card
+           Estimates average-case brute-force difficulty using the Rust backend rate.
+      ================================= -->
 
       <article class="panel full-card">
         <h2>Strong Password Estimator</h2>
@@ -80,6 +110,11 @@
       </article>
     </section>
 
+    <!-- ================================
+         Page footer
+         Displays course/module identity and current year.
+    ================================= -->
+
     <footer class="page-footer">
       <div class="footer-box">
         <p>Module 2 &mdash;
@@ -89,6 +124,11 @@
       </div>
     </footer>
   </main>
+
+  <!-- ================================
+       Frontend script
+       Loads the JavaScript that connects the page to the Rust backend.
+  ================================= -->
 
   <script src="app.js"></script>
 </body>
