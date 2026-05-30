@@ -172,7 +172,7 @@ The web interface includes:
 
 Running the Strong Password Estimator before running a demo uses a default rate of 5,000,000 guesses per second.
 
-After running either the Weak Demo or Moderate Demo, the Rust backend stores the latest measured local CPU guesses-per-second rate in memory. The Strong Password Estimator then uses that measured local rate to estimate how long that strong passward might take to Brute-Force using your CPU.
+After running either the Weak Demo or Moderate Demo, the Rust backend stores the latest measured local CPU guesses-per-second rate in memory. The Strong Password Estimator then uses that measured local rate to estimate how long that strong password might take to Brute-Force using your CPU.
 
 The Rust backend must be running at:
 
