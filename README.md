@@ -33,7 +33,7 @@ The Strong Password Estimator calculates an average-case search-space estimate u
 
 After either the Weak Demo or Moderate Demo runs, the Rust backend stores the latest measured local guesses-per-second rate from your CPU into memory. The estimator then uses that measured local rate for estimations.
 
-[Software Demo Video](http://youtube.link.goes.here)
+[Software Demo Video] https://youtu.be/ugBitH1c6YI
 
 ---
 
